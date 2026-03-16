@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Login | F2F{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-brand auth-brand-center">
+    </div>
+
+    <h1 class="auth-title">Log In</h1>
+
+    <div id="message" class="auth-message"></div>
+
+    <form id="loginForm" class="auth-form">
+      <label class="label">ID</label>
+      <input class="input" type="text" id="username" required>
+
+      <label class="label">Mobile</label>
+      <input class="input" type="password" id="password" required>
+
+      <button class="btn btn-block" type="submit">Log in</button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
