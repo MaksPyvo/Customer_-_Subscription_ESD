@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Login | F2F{% endblock %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-text">
+      <h1>Community Food Partners (CFP)</h1>
+      <p>CFP registers clients in the program.
+- F2Fes must be able to acquire this information to define and manage user access, orders, etc.</p>
+    </div>
+  </div>
+
+<div class="hero">
+    <div class="hero-text">
+      <h1>AgNet</h1>
+      <p>AgNet is the system that sources and provides food for F2Fes to order and have shipped to the warehouse provider.
+- F2Fes must be able to interact with AgNet and coordinate shipments to the warehouse so that food is available for ordering.</p>
+    </div>
+  </div>
+
+<div class="hero">
+    <div class="hero-text">
+      <h1>Customer Inventory System (CIS)</h1>
+      <p>The CIS at the warehouse interacts with F2Fes to coordinate inventory levels and to package orders for pickup and delivery.
+- Clients enrolled in F2F use the online ordering system our class will develop to pick and request an order delivery.</p>
+    </div>
+  </div>
+
+<div class="hero">
+    <div class="hero-text">
+      <h1>Online Delivery Services (ODS)</h1>
+      <p>ODS is queued by F2Fes to pickup a shipment from the Warehouse and deliver it to the registered address for the F2F enrolled client.
+- F2Fes coordinates the delivery through ODS integration, and updates both CIS and CFP when the delivery is completed.</p>
+    </div>
+  </div>
+
+{% endblock %}

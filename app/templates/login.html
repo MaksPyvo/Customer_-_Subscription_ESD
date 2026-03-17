@@ -4,24 +4,25 @@
 {% block content %}
 <div class="auth-page">
   <div class="auth-card">
-
+ 
     <div class="auth-brand auth-brand-center">
+      <img src="/static/images/f2f_logo_white.png" alt="Farm2Fork logo">
     </div>
-
-    <h1 class="auth-title">Log In</h1>
-
+ 
+    <h1 class="auth-title">Welcome Back</h1>
+    <p class="auth-subtitle">Log in with your Community Food Partners account.</p>
+ 
     <div id="message" class="auth-message"></div>
-
+ 
     <form id="loginForm" class="auth-form">
-      <label class="label">ID</label>
-      <input class="input" type="text" id="username" required>
-
-      <label class="label">Mobile</label>
-      <input class="input" type="password" id="password" required>
-
-      <button class="btn btn-block" type="submit">Log in</button>
+ 
+      <label class="label" for="username">ID</label>
+      <input class="input" type="text" id="username" placeholder="Enter your ID" required>
+ 
+      <label class="label" for="password">Mobile</label>
+      <input class="input" type="password" id="password" placeholder="Enter your mobile number" required>
+ 
+      <button class="btn btn-block" type="submit">Log In</button>
+ 
     </form>
-
-  </div>
-</div>
 {% endblock %}
