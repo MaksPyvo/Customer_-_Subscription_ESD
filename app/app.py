@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, make_response
+from modules.secret.secret import get_secret
 
 app = Flask(__name__)
 
@@ -14,5 +15,18 @@ def login():
 def providers():
    return render_template('providers.html')
  
+@app.route('/secret', methods=['GET'])
+def get_dt_secret():
+   try:
+      # get db secret
+      data = get_secret()
+      # returns as json for now...
+      return jsonify(data), 200
+        
+   except Exception as e:
+      # error handling
+      return jsonify({"error": str(e)}), 500
+   
+   
 if __name__ == '__main__':
    app.run(host='0.0.0.0', port=7500, debug=True)
