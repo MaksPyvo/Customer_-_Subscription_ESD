@@ -20,6 +20,9 @@ def get_dt_secret():
    try:
       # get db secret
       data = get_secret()
+      
+      secret = data.get('secret')
+      print("customer and subscriptions secret: ", secret)
       # returns as json for now...
       return jsonify(data), 200
         
