@@ -603,3 +603,99 @@ footer strong {
   height: 1px;
   background: var(--border);
 }
+
+
+
+.info-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+ 
+.info-header {
+  margin-bottom: 2.5rem;
+}
+ 
+.info-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--green-dark);
+  margin-bottom: 0.5rem;
+}
+ 
+.info-subtitle {
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+ 
+.info-container {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(45, 106, 45, 0.08);
+}
+ 
+.table-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--green-dark);
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--green-light);
+}
+ 
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 0.92rem;
+}
+ 
+.info-table thead tr {
+  background: var(--green);
+  color: #ffffff;
+}
+ 
+.info-table thead th {
+  padding: 0.9rem 1.6rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+ 
+.info-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+ 
+.info-table tbody tr:last-child {
+  border-bottom: none;
+}
+ 
+.info-table tbody tr:nth-child(even) {
+  background: var(--green-light);
+}
+ 
+.info-table tbody tr:hover {
+  background: #e4f4e4;
+}
+ 
+.info-table tbody td {
+  padding: 1rem 1.6rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+ 
+.info-table tbody td:first-child {
+  font-weight: bold;
+  color: var(--green-dark);
+  width: 35%;
+}
+ 

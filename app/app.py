@@ -14,6 +14,10 @@ def login():
 @app.route('/providers')
 def providers():
    return render_template('providers.html')
+
+@app.route('/info')
+def info():
+   return render_template('info.html')
  
 @app.route('/secret', methods=['GET'])
 def get_dt_secret():
@@ -22,13 +26,14 @@ def get_dt_secret():
       data = get_secret()
       
       secret = data.get('secret')
-      print("customer and subscriptions secret: ", secret)
+      # print("customer and subscriptions secret: ", secret)
       # returns as json for now...
-      return jsonify(data), 200
+      return render_template('secrets.html', secret=secret)
         
    except Exception as e:
       # error handling
       return jsonify({"error": str(e)}), 500
+
    
    
 if __name__ == '__main__':
