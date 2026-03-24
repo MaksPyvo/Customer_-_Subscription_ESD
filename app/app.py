@@ -1,7 +1,28 @@
+import os
+
+# libraries
 from flask import Flask, render_template, request, jsonify, make_response
+from dotenv import load_dotenv
+
+# modules
 from modules.secret.secret import get_secret
+from modules.database.database import db
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
+
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+
+# config SQLAlchemy to db
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 @app.route('/')
 def home():

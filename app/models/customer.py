@@ -18,5 +18,14 @@ class Customer(db.Model):
     dairy = db.Column(db.Integer)
     delivery_count = db.Column(db.Integer)
 
-    def __repr__(self):
-        return f"Customer {self.client_id}"
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "client_id": self.client_id,
+            "address": self.address,
+            "mobile": self.mobile,
+            "produce": self.produce,
+            "meat": self.meat,
+            "dairy": self.dairy,
+            "delivery_count": self.delivery_count
+        }
