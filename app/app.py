@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 # modules
 from modules.secret.secret import get_secret
 from modules.database.database import db
+from modules.CFP.primary import download_primary_files
+from modules.database.sync_primary import sync_primary_csv_to_db
 
 # Load environment variables
 load_dotenv()
@@ -58,4 +60,12 @@ def get_dt_secret():
    
    
 if __name__ == '__main__':
+   # download CFP CSV files on start up for now
+   # need to update logic when it should be called
+   download_primary_files()
+   primary_dir = "app/data/cfp_data"
+   
+   with app.app_context():
+      sync_primary_csv_to_db(primary_dir)
+      
    app.run(host='0.0.0.0', port=7500, debug=True)

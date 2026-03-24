@@ -1,6 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from modules.database.database import db
 
 class Customer(db.Model):
     __tablename__ = 'customer'
