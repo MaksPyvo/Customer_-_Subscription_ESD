@@ -3,11 +3,13 @@ import os
 # libraries
 from flask import Flask, render_template, request, jsonify, make_response
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # modules
 from modules.secret.secret import get_secret
 from modules.database.database import db
 from modules.CFP.primary import download_primary_files
+from modules.CFP.schedule import scheduled_primary_sync
 from modules.database.sync_primary import sync_primary_csv_to_db
 
 # Load environment variables
@@ -62,10 +64,29 @@ def get_dt_secret():
 if __name__ == '__main__':
    # download CFP CSV files on start up for now
    # need to update logic when it should be called
-   download_primary_files()
-   primary_dir = "app/data/cfp_data"
+
    
    with app.app_context():
+      # download /primary CFP files
+      download_primary_files()
+      # set directory
+      primary_dir = "app/data/cfp_data"
+      
+      # update db with primary files
       sync_primary_csv_to_db(primary_dir)
+      
+      # setup scheduler
+      scheduler = BackgroundScheduler()
+      
+      # run scheduled_primary_sync function every 60s (change to an hour for deployment)
+      scheduler.add_job(
+            func=scheduled_primary_sync, 
+            args=[app], 
+            trigger="interval", 
+            seconds=60
+            #hours=1
+      )
+      
+      scheduler.start()
       
    app.run(host='0.0.0.0', port=7500, debug=True)
