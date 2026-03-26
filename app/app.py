@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # modules
-from modules.secret.secret import get_secret
-from modules.database.database import db
-from modules.CFP.primary import download_primary_files
-from modules.CFP.schedule import scheduled_primary_sync
-from modules.database.sync_primary import sync_primary_csv_to_db
-
+from app.modules.secret.secret import get_secret
+from app.modules.database.database import db
+from app.modules.CFP.primary import download_primary_files
+from app.modules.CFP.schedule import scheduled_primary_sync
+from app.modules.database.sync_primary import sync_primary_csv_to_db
+from app.models.customer import Customer
 # Load environment variables
 load_dotenv()
 
@@ -32,9 +32,26 @@ db.init_app(app)
 def home():
    return render_template('index.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-   return render_template('login.html')
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    data = request.get_json() or request.form
+    client_id = data.get('username')
+    mobile = data.get('password')
+
+    customer = Customer.query.filter_by(client_id=client_id).first()
+
+    if customer and customer.mobile == mobile:
+        return jsonify({"success": True, "message": "Login successful"})
+    else:
+        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+
+@app.route('/customers')
+def get_customers():
+    customers = Customer.query.all()
+    return jsonify([c.to_dict() for c in customers])
 
 @app.route('/providers')
 def providers():

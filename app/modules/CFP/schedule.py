@@ -1,5 +1,5 @@
-from modules.CFP.primary import download_primary_files
-from modules.database.sync_primary import sync_primary_csv_to_db
+from app.modules.CFP.primary import download_primary_files
+from app.modules.database.sync_primary import sync_primary_csv_to_db
 
 # background job to sync CFP primary data
 # need to pass Flask app object for db context
