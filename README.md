@@ -21,5 +21,5 @@ pip install -r requirements.txt
 
 # Run App
 ```
-python app/app.py
+python -m app.app
 ```
