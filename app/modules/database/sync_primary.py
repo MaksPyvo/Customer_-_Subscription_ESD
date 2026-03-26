@@ -2,8 +2,8 @@ import os
 import csv
 import glob
 from sqlalchemy.dialects.postgresql import insert
-from modules.database.database import db
-from models.customer import Customer
+from app.modules.database.database import db
+from app.models.customer import Customer
 
 # """Reads CSVs and UPSERTs data into the database using SQLAlchemy."""
 def sync_primary_csv_to_db(dir_path):
