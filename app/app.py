@@ -75,7 +75,7 @@ def update_delivery():
        customer.dairy = customer.dairy + int(data.get('dairy', 0))
        customer.delivery_count = customer.delivery_count + 1
 
-       save database
+       # save database
        db.session.commit()
        return jsonify({"success": True, "message": "Delivery counts updated successfully."}), 200
 
