@@ -53,6 +53,37 @@ def get_customers():
     customers = Customer.query.all()
     return jsonify([c.to_dict() for c in customers])
 
+@app.route('/update-delivery', methods=['POST'])
+def update_delivery():
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "Invalid or missing JSON payload"}), 400
+        
+    client_id = data.get('client_id')
+    if not client_id:
+        return jsonify({"success": False, "message": "client_id is required"}), 400
+    try:
+       # get customer by client id
+       customer = Customer.query.filter_by(client_id=client_id).first()
+
+       if not customer:
+         return jsonify({"success": False, "message": 'Customer not found'}), 404
+        
+       # update user counts
+       customer.produce = customer.produce + int(data.get('produce', 0))
+       customer.meat = customer.meat + int(data.get('meat', 0))
+       customer.dairy = customer.dairy + int(data.get('dairy', 0))
+       customer.delivery_count = customer.delivery_count + 1
+
+       save database
+       db.session.commit()
+       return jsonify({"success": True, "message": "Delivery counts updated successfully."}), 200
+
+    except Exception as e:
+       # discard changes if error occurs
+       db.session.rollback() 
+       return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+
 @app.route('/providers')
 def providers():
    return render_template('providers.html')
