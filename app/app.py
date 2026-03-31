@@ -1,9 +1,11 @@
 import os
 
 # libraries
-from flask import Flask, render_template, request, jsonify, make_response
+from flask import Flask, render_template, request, jsonify, make_response, redirect, url_for
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
+import jwt
+import datetime
 
 # modules
 from app.modules.secret.secret import get_secret
@@ -12,6 +14,8 @@ from app.modules.CFP.primary import download_primary_files
 from app.modules.CFP.schedule import scheduled_primary_sync
 from app.modules.database.sync_primary import sync_primary_csv_to_db
 from app.models.customer import Customer
+from app.modules.auth.auth import generate_token, token_required, get_client_id_from_jwt
+
 # Load environment variables
 load_dotenv()
 
@@ -25,6 +29,8 @@ DB_NAME = os.getenv("DB_NAME")
 # config SQLAlchemy to db
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# get secretkey from env
+app.config['secret_key'] = os.getenv("JWT_PASS")
 
 db.init_app(app)
 
@@ -34,24 +40,45 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'GET':
-        return render_template('login.html')
+   if request.method == 'GET':
+      return render_template('login.html')
 
-    data = request.get_json() or request.form
-    client_id = data.get('username')
-    mobile = data.get('password')
+   # Get data directly from the submitted HTML form
+   client_id = request.form.get('username')
+   mobile = request.form.get('password')
 
-    customer = Customer.query.filter_by(client_id=client_id).first()
+   # Query customer from db
+   customer = Customer.query.filter_by(client_id=client_id).first()
+   
+   if customer and customer.mobile == mobile:
+      # Generate JWT token
+      token = generate_token(customer.client_id)
+      
+      # redirect to home page
+      response = redirect(url_for('home'))
+      
+      # set JWT to cookie
+      response.set_cookie('jwt_token', token, httponly=True, secure=False)
+      
+      return response, 200
+   else:
+      # If login fails, re-render the login page and pass an error message
+      return render_template('login.html', error="Invalid credentials"), 401
 
-    if customer and customer.mobile == mobile:
-        return jsonify({"success": True, "message": "Login successful"})
-    else:
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+@app.route('/logout')
+def logout():
+   # redirect to home page
+   response = redirect(url_for('home'))
+   
+   # delete the JWT cookie
+   response.delete_cookie('jwt_token')
+
+   return response
 
 @app.route('/customers')
 def get_customers():
-    customers = Customer.query.all()
-    return jsonify([c.to_dict() for c in customers])
+   customers = Customer.query.all()
+   return jsonify([c.to_dict() for c in customers])
 
 @app.route('/update-delivery', methods=['POST'])
 def update_delivery():
@@ -100,20 +127,23 @@ def get_dt_secret():
       
       secret = data.get('secret')
       # print("customer and subscriptions secret: ", secret)
-      # returns as json for now...
+
       return render_template('secrets.html', secret=secret)
         
    except Exception as e:
       # error handling
       return jsonify({"error": str(e)}), 500
 
-   
-   
+@app.route('/gettoken', methods=['GET'])
+@token_required
+def get_token(current_client_id): # need to pass current_client_id variable for token_required function
+   response = get_client_id_from_jwt()
+   return jsonify({"success": True, "client_id": response}), 200
+
 if __name__ == '__main__':
    # download CFP CSV files on start up for now
    # need to update logic when it should be called
 
-   
    with app.app_context():
       # download /primary CFP files
       download_primary_files()
@@ -131,8 +161,8 @@ if __name__ == '__main__':
             func=scheduled_primary_sync, 
             args=[app], 
             trigger="interval", 
-            seconds=60
-            #hours=1
+            # seconds=60
+            hours=1
       )
       
       scheduler.start()
