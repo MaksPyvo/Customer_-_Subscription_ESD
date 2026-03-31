@@ -65,6 +65,16 @@ def login():
       # If login fails, re-render the login page and pass an error message
       return render_template('login.html', error="Invalid credentials"), 401
 
+@app.route('/logout')
+def logout():
+   # redirect to home page
+   response = redirect(url_for('home'))
+   
+   # delete the JWT cookie
+   response.delete_cookie('jwt_token')
+
+   return response
+
 @app.route('/customers')
 def get_customers():
    customers = Customer.query.all()
@@ -126,36 +136,35 @@ def get_dt_secret():
 
 @app.route('/gettoken', methods=['GET'])
 @token_required
-def get_token(current_client_id):
+def get_token(current_client_id): # need to pass current_client_id variable for token_required function
    response = get_client_id_from_jwt()
    return jsonify({"success": True, "client_id": response}), 200
 
-   
 if __name__ == '__main__':
    # download CFP CSV files on start up for now
    # need to update logic when it should be called
 
-   # with app.app_context():
-   #    # download /primary CFP files
-   #    download_primary_files()
-   #    # set directory
-   #    primary_dir = "app/data/cfp_data"
+   with app.app_context():
+      # download /primary CFP files
+      download_primary_files()
+      # set directory
+      primary_dir = "app/data/cfp_data"
       
-   #    # update db with primary files
-   #    sync_primary_csv_to_db(primary_dir)
+      # update db with primary files
+      sync_primary_csv_to_db(primary_dir)
       
-   #    # setup scheduler
-   #    scheduler = BackgroundScheduler()
+      # setup scheduler
+      scheduler = BackgroundScheduler()
       
-   #    # run scheduled_primary_sync function every 60s (change to an hour for deployment)
-   #    scheduler.add_job(
-   #          func=scheduled_primary_sync, 
-   #          args=[app], 
-   #          trigger="interval", 
-   #          # seconds=60
-   #          hours=1
-   #    )
+      # run scheduled_primary_sync function every 60s (change to an hour for deployment)
+      scheduler.add_job(
+            func=scheduled_primary_sync, 
+            args=[app], 
+            trigger="interval", 
+            # seconds=60
+            hours=1
+      )
       
-   #    scheduler.start()
+      scheduler.start()
       
    app.run(host='0.0.0.0', port=7500, debug=True)
