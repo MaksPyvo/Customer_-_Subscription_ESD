@@ -12,44 +12,21 @@
     <h1 class="auth-title">Welcome Back</h1>
     <p class="auth-subtitle">Log in with your Community Food Partners account.</p>
  
-    <div id="message" class="auth-message"></div>
+    {% if error %}
+       <div class="auth-message" style="color: red; margin-bottom: 15px;">{{ error }}</div>
+    {% endif %}
  
-    <form id="loginForm" class="auth-form">
+    <form class="auth-form" method="POST" action="/login">
  
       <label class="label" for="username">ID</label>
-      <input class="input" type="text" id="username" placeholder="Enter your ID" required>
+      <input class="input" type="text" id="username" name="username" placeholder="Enter your ID" required>
  
       <label class="label" for="password">Mobile</label>
-      <input class="input" type="password" id="password" placeholder="Enter your mobile number" required>
+      <input class="input" type="password" id="password" name="password" placeholder="Enter your mobile number" required>
  
       <button class="btn btn-block" type="submit">Log In</button>
  
     </form>
-
-    <script>
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    const res = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-    document.getElementById('message').innerText = data.message;
-
-    if (data.success) {
-        document.getElementById('message').style.color = 'green';
-    } else {
-        document.getElementById('message').style.color = 'red';
-    }
- });
- </script>
-
-
+  </div>
+</div>
 {% endblock %}
-
