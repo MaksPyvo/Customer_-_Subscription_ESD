@@ -13,7 +13,7 @@ SFTP_PASS = os.getenv("CFP_PASS")
 def upload_revision_file(client, city):
     # Generate filename based on city
     filename=f"rev-CFP-{city}.csv"
-    local_path = f"./app/data/cfp_data/"
+    local_path = f"./data/cfp_data/"
     local_file_path = os.path.join(local_path, filename)
 
     # Construct remote file path
@@ -54,3 +54,13 @@ def upload_revision_file(client, city):
         print(f"Error uploading file to SFTP server: {e}")
         return False
     
+def parse_city(client):
+    # Simple parsing logic based on address content
+    if "Kitchener" in client.address:
+        return "Kitchener"
+    elif "Waterloo" in client.address:
+        return "Waterloo"
+    elif "Cambridge" in client.address:
+        return "Cambridge"
+    else:
+        return "Unknown"

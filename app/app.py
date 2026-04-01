@@ -12,6 +12,8 @@ from app.modules.CFP.primary import download_primary_files
 from app.modules.CFP.schedule import scheduled_primary_sync
 from app.modules.database.sync_primary import sync_primary_csv_to_db
 from app.models.customer import Customer
+from app.modules.CFP.revision import upload_revision_file
+from app.modules.CFP.revision import parse_city
 # Load environment variables
 load_dotenv()
 
@@ -75,10 +77,17 @@ def update_delivery():
        customer.dairy = customer.dairy + int(data.get('dairy', 0))
        customer.delivery_count = customer.delivery_count + 1
 
+       # upload revision file to CFP SFTP server
+       customer_city = parse_city(customer)
+       if customer_city == "Unknown":
+          raise Exception("Could not parse city from customer address")
+       if upload_revision_file(customer, customer_city)==False:
+          raise Exception("Failed to upload revision file to SFTP server")
+       
        # save database
        db.session.commit()
        return jsonify({"success": True, "message": "Delivery counts updated successfully."}), 200
-
+       
     except Exception as e:
        # discard changes if error occurs
        db.session.rollback() 
