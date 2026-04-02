@@ -148,6 +148,11 @@ def get_dt_secret():
 def get_token(): # need to pass current_client_id variable for token_required function
    client_id = get_client_id_from_jwt()
    token = get_token_from_request()
+   
+   if not token:
+      response = "Not logged in"
+      return jsonify({"success": False, "response": response}), 401
+   
    return jsonify({"success": True, "jwt": token, "client_id": client_id}), 200
 
 if __name__ == '__main__':
