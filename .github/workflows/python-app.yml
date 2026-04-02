@@ -1,0 +1,81 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Test and Deploy to Test Server
+
+# 1. Triggers: Every push or merge to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Python Version: Setup Python 3.13
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 3. Environment Variables: Dynamically create the .env file for testing
+      - name: Create .env file for tests
+        run: |
+          echo "SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> .env
+          echo "DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env
+          # Add any other required variables here following the same format
+
+      - name: Run Tests with pytest
+        run: |
+          pytest tests/
+
+  deploy:
+    name: Build and Deploy to Test Server
+    needs: test # This ensures deployment ONLY runs if the 'test' job succeeds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 5. Docker Tagging: Strictly using 'latest'
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t maksym52/flask-customer_and_subscriptions:latest .
+          docker push maksym52/flask-customer_and_subscriptions:latest
+
+      # 4. Secrets & SSH Targeting: Deploy using the test server secrets
+      - name: Deploy to Test Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_TEST_SERVER_NAME }}
+          username: root
+          password: ${{ secrets.SSH_TEST_PASSWORD }}
+          script: |
+            # Pull the new image
+            docker pull maksym52/flask-customer_and_subscriptions:latest
+            
+            # Stop and remove the old container
+            docker stop customer_and_subscriptions || true
+            docker rm customer_and_subscriptions || true
+            
+            # Run the new container using the .env file already present on the server
+            docker run -d -p 23500:7500 --env-file /root/customer_and_subscriptions/.env --name customer_and_subscriptions maksym52/flask-customer_and_subscriptions:latest
