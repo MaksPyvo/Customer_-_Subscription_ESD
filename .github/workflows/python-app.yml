@@ -32,10 +32,10 @@ jobs:
 
       # 3. Environment Variables: Dynamically create the .env file for testing
       - name: Create .env file for tests
+        env:
+          FULL_ENV_FILE: ${{ secrets.TEST_ENV_FILE }}
         run: |
-          echo "SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> .env
-          echo "DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env
-          # Add any other required variables here following the same format
+          echo "$FULL_ENV_FILE" > .env
 
       - name: Run Tests with pytest
         run: |
