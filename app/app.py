@@ -16,7 +16,7 @@ from app.modules.database.sync_primary import sync_primary_csv_to_db
 from app.models.customer import Customer
 from app.modules.CFP.revision import upload_revision_file
 from app.modules.CFP.revision import parse_city
-from app.modules.auth.auth import generate_token, token_required, get_client_id_from_jwt
+from app.modules.auth.auth import generate_token, token_required, get_client_id_from_jwt, get_token_from_request
 
 # Load environment variables
 load_dotenv()
@@ -144,10 +144,11 @@ def get_dt_secret():
       return jsonify({"error": str(e)}), 500
 
 @app.route('/gettoken', methods=['GET'])
-@token_required
-def get_token(current_client_id): # need to pass current_client_id variable for token_required function
-   response = get_client_id_from_jwt()
-   return jsonify({"success": True, "client_id": response}), 200
+# @token_required
+def get_token(): # need to pass current_client_id variable for token_required function
+   client_id = get_client_id_from_jwt()
+   token = get_token_from_request()
+   return jsonify({"success": True, "jwt": token, "client_id": client_id}), 200
 
 if __name__ == '__main__':
    # download CFP CSV files on start up for now
