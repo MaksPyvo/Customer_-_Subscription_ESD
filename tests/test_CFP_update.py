@@ -37,12 +37,12 @@ class TestRevisionUpload(unittest.TestCase):
         self.assertTrue(result)
         
         mock_file.assert_called_once_with(
-            './data/cfp_data/rev-CFP-Kitchener.csv', 
+            './app/data/cfp_data/rev-CFP-Kitchener.csv', 
             mode='w', newline='', encoding='utf-8'
         )
         
         mock_sftp_instance.put.assert_called_once_with(
-            './data/cfp_data/rev-CFP-Kitchener.csv', 
+            './app/data/cfp_data/rev-CFP-Kitchener.csv', 
             '/incoming/rev-CFP-Kitchener.csv'
         )
 
