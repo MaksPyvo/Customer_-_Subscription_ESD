@@ -71,7 +71,7 @@ def login():
          response = jsonify({
                "message": "Login successful", 
                "token": token 
-         }), 200
+         })
 
       # if form request redirect to home
       else:
