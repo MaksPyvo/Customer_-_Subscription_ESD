@@ -42,31 +42,56 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+   # load html page if GET request
    if request.method == 'GET':
       return render_template('login.html')
 
-   # Get data directly from the submitted HTML form
-   client_id = request.form.get('username')
-   mobile = request.form.get('password')
+   # check if request is a json POST req
+   is_json_request = request.is_json
+   
+   if is_json_request:
+      # get data from json body
+      data = request.get_json()
+      client_id = data.get('username')
+      mobile = data.get('password')
+   else:
+      # get data from form data
+      client_id = request.form.get('username')
+      mobile = request.form.get('password')
 
-   # Query customer from db
+   # query the db for user
    customer = Customer.query.filter_by(client_id=client_id).first()
    
+   # if id and mobile match then login
    if customer and customer.mobile == mobile:
-      # Generate JWT token
       token = generate_token(customer.client_id)
       
-      # redirect to home page
-      response = redirect(url_for('home'))
-      
-      # set JWT to cookie
-      response.set_cookie('jwt_token', token, httponly=True, secure=False)
-      
-      return response, 200
-   else:
-      # If login fails, re-render the login page and pass an error message
-      return render_template('login.html', error="Invalid credentials"), 401
+      # if json request return 200 and token
+      if is_json_request:
+         response = jsonify({
+               "message": "Login successful", 
+               "token": token 
+         })
 
+      # if form request redirect to home
+      else:
+         response = redirect(url_for('home')) 
+
+      # set cookie and header with token
+      response.set_cookie('jwt_token', token, httponly=True, secure=False)
+      response.headers['Authorization'] = f'Bearer {token}'
+      
+      return response 
+      
+   # If login fails, re-render the login page and pass an error message
+   else:
+      if is_json_request:
+         # return json back if through json
+         return jsonify({"error": "Invalid credentials"}), 401
+      else:
+         # re-render login
+         return render_template('login.html', error="Invalid credentials"), 401
+      
 @app.route('/logout')
 def logout():
    # redirect to home page
