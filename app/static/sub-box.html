@@ -1,0 +1,45 @@
+<div class="modal-overlay" id="subModal" role="dialog" aria-modal="true" aria-label="Subscribe to item">
+  <div class="modal">
+ 
+    <div class="modal-header">
+      <h2>Subscribe to Item</h2>
+      <button class="modal-close" onclick="closeSubModal()" aria-label="Close">✕</button>
+    </div>
+ 
+    <div class="modal-body">
+ 
+      <div class="modal-product-name" id="modalProductName">Product Name</div>
+      <div class="modal-product-price" id="modalProductPrice">£0.00 per unit</div>
+ 
+      <span class="modal-label">Quantity</span>
+      <div class="modal-quantity">
+        <button class="qty-btn" onclick="changeQty(-1)" aria-label="Decrease quantity">−</button>
+        <span class="qty-display" id="qtyDisplay">1</span>
+        <button class="qty-btn" onclick="changeQty(1)" aria-label="Increase quantity">+</button>
+      </div>
+ 
+      <label class="modal-label" for="frequencySelect">Delivery Frequency</label>
+      <select class="freq-select" id="frequencySelect" onchange="updateSummary()">
+        <option value="daily">Daily</option>
+        <option value="weekly" selected>Weekly</option>
+        <option value="biweekly">Biweekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="3months">Every 3 months </option>
+        <option value="6months">Every 6 months</option>
+        <option value="yearly">Yearly</option>
+      </select>
+ 
+      <div class="modal-summary" id="modalSummary">
+        You'll receive <strong id="summaryQty">1</strong> × <strong id="summaryName">this item</strong>
+        delivered <strong id="summaryFreq">weekly</strong>.
+      </div>
+ 
+    </div>
+ 
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeSubModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmSubscription()">Confirm Subscription</button>
+    </div>
+ 
+  </div>
+</div>
