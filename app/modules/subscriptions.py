@@ -13,7 +13,9 @@ from datetime import datetime, timedelta, date
 from app.modules.auth.auth import generate_token
 from app.config import Config
 
-@app.route('/api/v1/subscriptions', methods=['POST'])
+subscriptions_bp = Blueprint('subscriptions', __name__)
+
+@subscriptions_bp.route('/api/v1/subscriptions', methods=['POST'])
 def add_subscription():
     # get data
     data = request.get_json()
@@ -132,7 +134,7 @@ def place_order(customer_id, product_id, qty):
 
     
 
-@app.route('/api/v1/subscriptions', methods=['DELETE'])
+@subscriptions_bp.route('/api/v1/subscriptions', methods=['DELETE'])
 def deleteSubscription():
     data = request.get_json()
 
@@ -186,7 +188,7 @@ def parse_address(address_string):
     return [parts[0], parts[1], prov_and_postal[0], prov_and_postal[1]]
 
 
-@app.route('/api/v1/subscriptions', methods=['PATCH'])
+@subscriptions_bp.route('/api/v1/subscriptions', methods=['PATCH'])
 def update_subscription():
     #get data from json
     data = request.get_json()
@@ -229,7 +231,7 @@ def update_subscription():
             "error": {"code": "DATABASE_ERROR", "message": str(e)}
         }, 400
 
-@app.route('/api/get_subscriptions', methods=['GET'])
+@subscriptions_bp.route('/api/get_subscriptions', methods=['GET'])
 def get_subscriptions():
     token = session.get("user_token")
     if not token:

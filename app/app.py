@@ -20,6 +20,7 @@ from app.modules.CFP.revision import upload_revision_file
 from app.modules.CFP.revision import parse_city
 from app.modules.auth.auth import generate_token, token_required, get_client_id_from_jwt, get_token_from_request
 
+from app.modules.subscriptions import subscriptions_bp
 # Load environment variables
 load_dotenv()
 
@@ -35,6 +36,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_H
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # get secretkey from env
 app.config['secret_key'] = os.getenv("JWT_PASS")
+
+app.register_blueprint(subscriptions_bp)
 
 db.init_app(app)
 
