@@ -8,6 +8,7 @@ import jwt
 import datetime
 
 # modules
+from app.modules.subscriptions import *
 from app.modules.secret.secret import get_secret
 from app.modules.database.database import db
 from app.modules.CFP.primary import download_primary_files
@@ -204,7 +205,27 @@ if __name__ == '__main__':
             # seconds=60
             hours=1
       )
+      def run_subscription_checker():
+         with app.app_context():
+            from app.modules.subscriptions import checkDailySubscriptions
+            checkDailySubscriptions() # run once on start up to check if any subscriptions need to be processed on start up (e.g. if app restarts in middle of day)
       
+      # run daily subscription checker every 24 hours
+         try:
+            scheduler.add_job(
+               func=checkDailySubscriptions,
+               trigger="interval",
+               days=1,
+               next_run_time=datetime.datetime.now() + datetime.timedelta(days=1)
+            )
+         except Exception:
+         # importing the subscriptions module may fail if there are runtime errors
+         # keep scheduler running; fix subscription module errors separately
+            pass
+
       scheduler.start()
+
+      token = generate_token("H478")
+      print("Sample JWT for client_id H478:", token)
       
    app.run(host='0.0.0.0', port=7500, debug=False, use_reloader=False)

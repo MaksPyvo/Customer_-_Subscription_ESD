@@ -1,15 +1,21 @@
+import requests
+from sqlalchemy import null, text, true
+
+from app.models.customer import Customer
 from app.modules.database.database import db
-from sqlalchemy.dialects.postgresql import insert, delete, request, session
+from flask import request
+
 from app.models.subscription import Subscription
-from datetime import datetime, timedelta, today
+from datetime import datetime, timedelta, date
 from app.app import app
+from app.modules.auth.auth import generate_token
 
 @app.route('/api/v1/subscriptions', methods=['POST'])
 def add_subscription():
     # get data
     data = request.get_json()
     occurence = data.get('occurence', 'weekly')
-    quantity = data.get('qty', )
+    quantity = data.get('qty', 1)
     today = datetime.now().date()
     
     # calculate next order date
@@ -19,7 +25,7 @@ def add_subscription():
         # add to db
         new_sub = Subscription(
             product_id=data['product_id'],
-            qty=quantity,
+            quantity=quantity,
             occurence=occurence,
             next_order=next_date
         )
@@ -47,13 +53,79 @@ def checkDailySubscriptions():
     
     # query database for subscriptions where next occurence == today
     # get customer id, product id, occurence and qty 
-    result = session.query(Subscription).with_entities(Subscription.customer_id, Subscription.product_id, Subscription.qty, Subscription.occurence).filter(Subscription.next_order = date.today()).all()
+    result = db.session.query(Subscription).filter(Subscription.next_order == date.today()).all()
     
     for r in result:
         # update next order date
+        place_order(r.customer_id, r.product_id, r.quantity)
         next_date = calculate_next_order_date(r.occurence)
+        r.next_order = next_date
+        db.session.commit()
+        
 
-        # place order
+def place_order(customer_id, product_id, qty):
+    #Query the product using parameterized SQL
+    query = text("SELECT name FROM products WHERE id = :pid")
+    product_result = db.session.execute(query, {"pid": product_id}).fetchone()
+    
+    if not product_result:
+        return {"error": "Product not found"}
+        
+    product_name = product_result[0]
+
+
+    order_session = requests.Session()
+
+    customer = db.session.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        return {"error": "Customer not found"}
+
+    JWT_token = generate_token(customer.client_id)
+    #Initiate Checkoout
+    initiate_checkout_json = {
+        "items": [
+            {
+                "productId":   product_id,
+                "productName": product_name,
+                "quantity":    qty,
+                "unit":        "kg"
+            }
+        ],
+        "userToken": JWT_token, 
+        "clientID": customer.client_id
+    }
+    
+    try:
+        # call checkout API
+        init_response = order_session.post('http://165.22.230.110:5001/checkout/initiate', json=initiate_checkout_json)
+        init_response.raise_for_status() # Raises an exception for 4xx/5xx status codes
+        
+    except requests.exceptions.RequestException as e:
+        return {"error": "Failed to initiate checkout", "details": str(e)}
+
+    #Fetch Customer Address
+
+    address_vector = parse_address(customer.address)
+    
+    #Submit Checkout
+    submit_checkout_json = {
+        "addressLine1": address_vector[0],
+        "city":         address_vector[1],      
+        "province":     address_vector[2],
+        "postalCode":   address_vector[3],
+        "dropOff":      True,  
+    }
+
+    try:
+        submit_response = order_session.post('http://165.22.230.110:5001/checkout/submit', json=submit_checkout_json)
+        submit_response.raise_for_status()
+        
+        #Return the successful response
+        return {"status": "success", "data": submit_response.json()}
+    #Handle any exceptions that occur during the API call    
+    except requests.exceptions.RequestException as e:
+        return {"error": "Failed to submit checkout", "details": str(e)}
+
 
     
 
@@ -64,8 +136,7 @@ def deleteSubscription():
     id = data.get('subscription_id')
 
     try: 
-        query = Subscription.delete().where(Subscription.c.subscription_id == id)
-        db.session.add(query)
+        db.session.query(Subscription).filter_by(id=id).delete()
         db.session.commit()
 
         return {
@@ -83,7 +154,7 @@ def deleteSubscription():
         }, 400
 
 def calculate_next_order_date(occurence):
-
+    today = date.today()
     if occurence == 'weekly':
         next_date = today + timedelta(weeks=1)
     elif occurence == 'bi-weekly':
@@ -99,3 +170,14 @@ def calculate_next_order_date(occurence):
     else:
         next_date = today + timedelta(days=7) 
     return next_date
+
+# Helper function to parse address string into components
+def parse_address(address_string):
+    #Split the string by commas and clean up extra spaces
+    parts = [part.strip() for part in address_string.split(',')]
+    
+    #Split the final chunk by the FIRST space only
+    prov_and_postal = parts[2].split(maxsplit=1)
+    
+    #Assemble and return the final list
+    return [parts[0], parts[1], prov_and_postal[0], prov_and_postal[1]]
