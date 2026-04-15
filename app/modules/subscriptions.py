@@ -6,10 +6,10 @@ import jwt
 from app.models.customer import Customer
 from app.modules.database.database import db
 from flask import request
+from flask import Blueprint, request, jsonify
 
 from app.models.subscription import Subscription
 from datetime import datetime, timedelta, date
-from app.app import app
 from app.modules.auth.auth import generate_token
 from app.config import Config
 
