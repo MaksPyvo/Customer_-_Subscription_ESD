@@ -1,5 +1,7 @@
 import requests
-from sqlalchemy import null, text, true
+from sqlalchemy import null, text, true, update
+from sqlalchemy.orm import joinedload
+import jwt
 
 from app.models.customer import Customer
 from app.modules.database.database import db
@@ -9,6 +11,7 @@ from app.models.subscription import Subscription
 from datetime import datetime, timedelta, date
 from app.app import app
 from app.modules.auth.auth import generate_token
+from app.config import Config
 
 @app.route('/api/v1/subscriptions', methods=['POST'])
 def add_subscription():
@@ -157,7 +160,7 @@ def calculate_next_order_date(occurence):
     today = date.today()
     if occurence == 'weekly':
         next_date = today + timedelta(weeks=1)
-    elif occurence == 'bi-weekly':
+    elif occurence == 'biweekly':
         next_date = today + timedelta(weeks=2)
     elif occurence == 'monthly':
         next_date = today + timedelta(days=30)
@@ -181,3 +184,90 @@ def parse_address(address_string):
     
     #Assemble and return the final list
     return [parts[0], parts[1], prov_and_postal[0], prov_and_postal[1]]
+
+
+@app.route('/api/v1/subscriptions', methods=['PATCH'])
+def update_subscription():
+    #get data from json
+    data = request.get_json()
+    sub_id = data.get('id')
+    occurence = data.get('occurence')
+    quantity = data.get('qty')
+    
+    if not sub_id:
+        return {"status": "error", "error": {"message": "Subscription ID is required"}}, 400
+
+    try:
+        # fetch from db
+        sub = db.session.query(Subscription).filter_by(id=sub_id).first()
+
+        if not sub:
+            return {"status": "error", "error": {"message": "Subscription not found"}}, 404
+
+        # update
+        if occurence:
+            sub.occurence = occurence
+            #recaclulate order date
+            sub.next_order = calculate_next_order_date(occurence)
+        
+        if quantity is not None:
+            sub.quantity = quantity
+
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "data": sub.to_dict(),
+            "error": None
+        }, 200
+
+    except Exception as e:
+        db.session.rollback()
+        return {
+            "status": "error",
+            "data": None,
+            "error": {"code": "DATABASE_ERROR", "message": str(e)}
+        }, 400
+
+@app.route('/api/get_subscriptions', methods=['GET'])
+def get_subscriptions():
+    token = session.get("user_token")
+    if not token:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
+    try:
+        # get client id from token
+        payload = jwt.decode(token, Config.CS_JWT_PASS, algorithms=["HS256"])
+        token_client_id = payload["client_id"]
+
+        #join tables to get product name and customer id from client id in token
+        query = text("""
+            SELECT 
+                s.id, 
+                s.occurence, 
+                s.quantity, 
+                s.next_order, 
+                p.name AS product_name
+            FROM subscriptions s
+            JOIN products p ON s.product_id = p.id
+            JOIN customers c ON s.customer_id = c.id
+            WHERE c.client_id = :token_cid
+        """)
+        
+        results = db.session.execute(query, {"token_cid": token_client_id}).mappings().all()
+        
+        # add to database
+        subscriptions = []
+        for row in results:
+            subscriptions.append({
+                "id": row['id'],
+                "product_name": row['product_name'],
+                "occurence": row['occurence'],
+                "quantity": row['quantity'],
+                "next_order": row['next_order'].isoformat() if row['next_order'] else None
+            })
+
+        return jsonify(subscriptions), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500

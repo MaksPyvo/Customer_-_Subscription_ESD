@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 import jwt
 import datetime
+from flask_cors import CORS
 
 # modules
 from app.modules.subscriptions import *
@@ -153,7 +154,7 @@ def providers():
 @app.route('/info')
 def info():
    return render_template('info.html')
- 
+
 @app.route('/secret', methods=['GET'])
 def get_dt_secret():
    try:
@@ -229,3 +230,5 @@ if __name__ == '__main__':
       print("Sample JWT for client_id H478:", token)
       
    app.run(host='0.0.0.0', port=7500, debug=False, use_reloader=False)
+
+CORS(app, supports_credentials=True, origins=["http://165.22.230.110:5001"])
