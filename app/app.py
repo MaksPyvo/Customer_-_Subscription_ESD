@@ -129,9 +129,9 @@ def update_delivery():
          return jsonify({"success": False, "message": 'Customer not found'}), 404
         
        # update user counts
-       customer.produce = customer.produce + int(data.get('produce', 0))
-       customer.meat = customer.meat + int(data.get('meat', 0))
-       customer.dairy = customer.dairy + int(data.get('dairy', 0))
+       customer.produce = (customer.produce or 0) + int(data.get('produce', 0))
+       customer.meat = (customer.meat or 0) + int(data.get('meat', 0))
+       customer.dairy = (customer.dairy or 0) + int(data.get('dairy', 0))
        customer.delivery_count = customer.delivery_count + 1
 
        # upload revision file to CFP SFTP server
@@ -185,11 +185,14 @@ def get_token(): # need to pass current_client_id variable for token_required fu
    
    return jsonify({"success": True, "jwt": token, "client_id": client_id}), 200
 
+CORS(app, supports_credentials=True, origins=["http://165.22.230.110:5001"])
+
 if __name__ == '__main__':
    # download CFP CSV files on start up for now
    # need to update logic when it should be called
 
    with app.app_context():
+      db.create_all()
       # download /primary CFP files
       download_primary_files()
       # set directory
@@ -233,5 +236,3 @@ if __name__ == '__main__':
       print("Sample JWT for client_id H478:", token)
       
    app.run(host='0.0.0.0', port=7500, debug=False, use_reloader=False)
-
-CORS(app, supports_credentials=True, origins=["http://165.22.230.110:5001"])
